@@ -36,9 +36,10 @@ class TcpTunnel(object):
         data = await reader.read(self.HEADER_SIZE)
         if len(data) != self.HEADER_SIZE:
             writer.close()
+            return
         size = struct.unpack('!I', data[:self.HEADER_SIZE])[0]
         data = await reader.read(size)
-        while len(data) < size:
+        while len(data) < size and not reader.at_eof():
             data += await reader.read(size - len(data))
         tunnel_req = json.loads(data.decode())
         dst_reader, dst_writer = await asyncio.open_connection(tunnel_req['dst_host'], tunnel_req['dst_port'])
